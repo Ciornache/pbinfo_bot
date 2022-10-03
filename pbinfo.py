@@ -6,10 +6,10 @@ driver = webdriver.Chrome(
     executable_path="chromedriver.exe")
 driver.get("https://pastebin.com/u/a53")
 index, pageButton, cnt, solutionVectorm, ID, Index, page = 1, 2, 1, [], [], 3, 2
+pb = []
 
 
 class PbinfoBot:
-    global Id, Index
 
     def GetSolutions():
         global cnt, index, pageButton, solutionVector
@@ -56,31 +56,45 @@ class PbinfoBot:
         username = driver.find_element(
             By.XPATH, '/html/body/div[2]/div[6]/div/div[4]/div[1]/div[2]/form/div/div[2]/div[1]/input')
         username.send_keys('MonkeyDLuffy')
+        sleep(2)
         password = driver.find_element(
             By.XPATH, '/html/body/div[2]/div[6]/div/div[4]/div[1]/div[2]/form/div/div[2]/div[2]/input')
         password.send_keys('peakpiece1234')
+        sleep(2)
         driver.find_element(
             By.XPATH, '/html/body/div[2]/div[6]/div/div[4]/div[1]/div[2]/form/div/div[2]/div[4]/button').click()
 
     def GetProblemsIDS():
+        global ID, Index, page
         driver.get("https://www.pbinfo.ro/probleme")
-        id = driver.find_element(
-            By.XPATH, '/html/body/div[3]/div[5]/div/div[5]/div[2]/div[{}]/div[1]/h3/code').format(Index)
-        name = driver.find_element(
-            By.XPATH, '/html/body/div[2]/div[4]/div/div[5]/div[2]/div[{}]/div[1]/h3/a[1]').format(Index)
-        ID.append(id.text, name.text)
-        Index = Index + 1
-        if Index == 13:
-            Index = 3
-            page += 1
-            if page > 9:
-                page -= 1
-        if page <= 3:
-            driver.find_element(
-                By.XPATH, '/html/body/div[3]/div[4]/div/div[5]/div[2]/div[14]/nav/ul/li[{}]/a'.format(page)).click()
-        else:
-            driver.find_element(
-                By.XPATH, '/html/body/div[2]/div[4]/div/div[5]/div[2]/div[13]/nav/ul/li[{}]/a'.format(page)).click()
+        while 1:
+            sleep(2)
+            global id, name
+            if page == 2 and Index > 4:
+                print("Here")
+                id = driver.find_element(
+                    By.XPATH, '/html/body/div[3]/div[5]/div/div[5]/div[2]/div[{}]/div[1]/h3/code'.format(Index+1))
+                name = driver.find_element(
+                    By.XPATH, '/html/body/div[3]/div[5]/div/div[5]/div[2]/div[{}]/div[1]/h3/a'.format(Index+1))
+            else:
+                id = driver.find_element(
+                    By.XPATH, '/html/body/div[3]/div[5]/div/div[5]/div[2]/div[{}]/div[1]/h3/code'.format(Index))
+                name = driver.find_element(
+                    By.XPATH, '/html/body/div[3]/div[5]/div/div[5]/div[2]/div[{}]/div[1]/h3/a'.format(Index))
+            ID.append(id.text), pb.append(name.text)
+            Index = Index + 1
+            print(Index)
+            if Index == 13:
+                Index = 3
+                page += 1
+                if page > 9:
+                    page -= 1
+                if page <= 3:
+                    driver.find_element(
+                        By.XPATH, '/html/body/div[3]/div[5]/div/div[5]/div[2]/div[14]/nav/ul/li[{}]/a'.format(page)).click()
+                else:
+                    driver.find_element(
+                        By.XPATH, '/html/body/div[2]/div[5]/div/div[5]/div[2]/div[13]/nav/ul/li[{}]/a'.format(page)).click()
 
 
 PbinfoBot.LogIntoPbinfo()

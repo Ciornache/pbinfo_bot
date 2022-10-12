@@ -11,8 +11,12 @@ from selenium.common.exceptions import NoSuchElementException,  NoSuchWindowExce
 import json
 driver = webdriver.Chrome(
     executable_path="chromedriver.exe")
-index, pageButton, cnt, solutionVector, ID, Index, page = 1, 1, 1, [], [], 3, 1
+index, pageButton, cnt, solutionVector, ID, Index, page = 1, 15, 1, [], [], 3, 1
 pb, names = [], []
+options = webdriver.ChromeOptions()
+options.add_argument('--ignore-certificate-errors')
+options.add_argument('--ignore-ssl-errors')
+driver = webdriver.Chrome(chrome_options=options)
 
 
 def swap(a, b):
@@ -26,7 +30,10 @@ class PbinfoBot:
     def GetSolutions():
         driver.get("https://pastebin.com/u/a53")
         global cnt, index, pageButton, solutionVector
-        while pageButton <= 1:
+        yes = 0
+        while pageButton <= 20:
+            if pageButton == 20 and index == 75:
+                break
             problemName = driver.find_element(
                 By.XPATH, '/html/body/div[1]/div[2]/div[1]/div[1]/table/tbody/tr[{}]/td[1]/a'.format(index))
             names.append(problemName.text)
@@ -34,14 +41,16 @@ class PbinfoBot:
                 index = index + 1
                 continue
             problemName.click()
-            try:
-                WebDriverWait(driver, 2).until(EC.presence_of_element_located(
-                    (By.XPATH, '/html/body/div[1]/div/div/div/div[2]/div/button[2]')))
-                agreeButton = driver.find_element(
-                    By.XPATH, "/html/body/div[1]/div/div/div/div[2]/div/button[2]")
-                agreeButton.click()
-            except (NoSuchWindowException, NoSuchElementException, TimeoutException):
-                pass
+            if yes == 0:
+                try:
+                    WebDriverWait(driver, 2).until(EC.presence_of_element_located(
+                        (By.XPATH, '/html/body/div[1]/div/div/div/div[2]/div/button[2]')))
+                    agreeButton = driver.find_element(
+                        By.XPATH, "/html/body/div[1]/div/div/div/div[2]/div/button[2]")
+                    agreeButton.click()
+                except (NoSuchWindowException, NoSuchElementException, TimeoutException):
+                    pass
+            yes += 1
             solution = driver.find_element(
                 By.CLASS_NAME, 'text')
             solutionVector.append(solution.text)
@@ -116,7 +125,27 @@ class PbinfoBot:
         with open(name, 'w') as i:
             json.dump(data, i, indent=len(data))
 
+    def AlternateSolution():
+        driver.get("https://www.pbinfo.ro/")
+        autIcon = driver.find_element(
+            By.XPATH, "/html/body/div[2]/nav/div/div[2]/ul[2]/li[1]/a/i")
+        autIcon.click()
+        WebDriverWait(driver, 10).until(EC.element_to_be_clickable(
+            (By.XPATH, "/html/body/div[2]/div[1]/div[2]/div/form/div[2]/div[1]/div/input")))
+        utilizator = driver.find_element(
+            By.XPATH, "/html/body/div[2]/div[1]/div[2]/div/form/div[2]/div[1]/div/input")
+        parola = driver.find_element(
+            By.XPATH, "/html/body/div[2]/div[1]/div[2]/div/form/div[2]/div[2]/div/input")
+        utilizator.send_keys("MonkeyDLuffy")
+        parola.send_keys("peakpiece1234")
+        autButton = driver.find_element(
+            By.XPATH, "/html/body/div[2]/div[1]/div[2]/div/form/div[3]/div[1]/div/button[2]")
+        autButton.click()
 
+
+PbinfoBot.GetSolutions()
+PbinfoBot.AlternateSolution()
+PbinfoBot.GetProblemsIDS()
 for i in range(1, len(names) - 1):
     for j in range(i + 1, len(names)-1):
         if i > j:

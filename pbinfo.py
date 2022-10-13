@@ -11,7 +11,7 @@ from selenium.common.exceptions import NoSuchElementException,  NoSuchWindowExce
 import json
 driver = webdriver.Chrome(
     executable_path="chromedriver.exe")
-index, pageButton, cnt, solutionVector, ID, Index, page = 1, 15, 1, [], [], 3, 1
+index, pageButton, cnt, solutionVector, ID, Index, page = 1, 1, 1, [], [], 3, 1
 pb, names = [], []
 options = webdriver.ChromeOptions()
 options.add_argument('--ignore-certificate-errors')
@@ -103,23 +103,23 @@ class PbinfoBot:
                 "https://www.pbinfo.ro/probleme?start={}".format(page*10 - 10))
 
     def UploadProblems():
-        for i in range(1, len(ID) - 1):
-            currID, currName, lf, rg, solution = ID[i], pb[i], 0, name.length - 1, ''
-            while st <= dr:
-                mid = (st + dr) / 2
-                if name[mid] == currName:
-                    solution = solutionVector[mid]
+        for i in range(0, len(ID) - 1):
+            currID, currName, st, dr, solution = ID[i], pb[i], 0, len(
+                names) - 1, ''
+            probName = driver.find_element(
+                By.XPATH, "/html/body/div[2]/div[4]/div/div[4]/h1/a[1]")
+            for j in range(0, len(names) - 1):
+                if j == probName:
+                    solution = solutionVector[j]
                     break
-                elif name[mid] < currName:
-                    st = mid + 1
-                else:
-                    dr = mid - 1
+            print(solution)
             driver.get(
-                "https://www.pbinfo.ro/probleme/{}/{}".format(currID, currName))
+                "https://www.pbinfo.ro/probleme/{}/{}".format(newId, currName))
+            break
             form = driver.find_element(By.CLASS_NAME, "CodeMirror-scroll")
             form.send_keys(solution)
-            driver.find_element(
-                By.XPATH, "/html/body/div[2]/div[3]/div/div[11]/div/div[12]/div[2]/div/form/div[4]/button").click()
+            # driver.find_element(
+            # By.XPATH, "/html/body/div[2]/div[3]/div/div[11]/div/div[12]/div[2]/div/form/div[4]/button").click()
 
     def CreateJson(data, name):
         with open(name, 'w') as i:
@@ -143,11 +143,20 @@ class PbinfoBot:
         autButton.click()
 
 
-PbinfoBot.GetSolutions()
-PbinfoBot.AlternateSolution()
-PbinfoBot.GetProblemsIDS()
 for i in range(1, len(names) - 1):
     for j in range(i + 1, len(names)-1):
         if i > j:
             swap(names[i], names[j]), swap(
                 solutionVector[i], solutionVector[j])
+
+f = open("Problem_id.json")
+ID = json.load(f)
+f = open("A53_problem_names.json")
+names = json.load(f)
+f = open("Problem_name.json")
+pb = json.load(f)
+f = open("solutions.json")
+solutionVector = json.load(f)
+PbinfoBot.AlternateSolution()
+sleep(2)
+PbinfoBot.UploadProblems()

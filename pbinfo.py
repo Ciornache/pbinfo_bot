@@ -1,6 +1,7 @@
 from asyncio.windows_events import NULL
 from hashlib import pbkdf2_hmac
 from hmac import new
+from http.client import NETWORK_AUTHENTICATION_REQUIRED
 from multiprocessing.connection import wait
 from selenium import webdriver
 from time import sleep
@@ -8,6 +9,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException,  NoSuchWindowException, TimeoutException, StaleElementReferenceException
+from selenium.webdriver.common.keys import Keys
 import json
 driver = webdriver.Chrome(
     executable_path="chromedriver.exe")
@@ -23,6 +25,14 @@ def swap(a, b):
     crt = a
     a = b
     b = crt
+
+
+def Good(a):
+    yes = ''
+    for j in a:
+        if j != '#':
+            yes += j
+    return yes
 
 
 class PbinfoBot:
@@ -60,32 +70,6 @@ class PbinfoBot:
                 pageButton += 1
             driver.get("https://pastebin.com/u/a53/{}".format(pageButton))
 
-    def PrintSomething():
-        print("ONE PIECE")
-
-    def LogIntoPbinfo():
-        driver.get("https://www.pbinfo.ro/")
-        username = driver.find_element(
-            By.XPATH, '/html/body/div[2]/div[6]/div/div[4]/div[1]/div[2]/form/div/div[2]/div[1]/input')
-        username.send_keys('MonkeyDLuffy')
-        password = driver.find_element(
-            By.XPATH, '/html/body/div[2]/div[6]/div/div[4]/div[1]/div[2]/form/div/div[2]/div[2]/input')
-        password.send_keys('peakpiece1234')
-        try:
-            element = WebDriverWait(driver, 10).until_not(
-                EC.presence_of_element_located((By.ID, "aswift_11")))
-        except (StaleElementReferenceException, TimeoutException):
-            driver.get("https://www.pbinfo.ro/")
-            sleep(2)
-            username = driver.find_element(
-                By.XPATH, '/html/body/div[2]/div[6]/div/div[4]/div[1]/div[2]/form/div/div[2]/div[1]/input')
-            password = driver.find_element(
-                By.XPATH, '/html/body/div[2]/div[6]/div/div[4]/div[1]/div[2]/form/div/div[2]/div[2]/input')
-            username.send_keys('MonkeyDLuffy')
-            password.send_keys('peakpiece1234')
-        driver.find_element(
-            By.XPATH, '//*[@id="form-login"]/div/div[2]/div[4]/button').click()
-
     def GetProblemsIDS():
         global ID, Index, page
         driver.get("https://www.pbinfo.ro/probleme")
@@ -93,39 +77,43 @@ class PbinfoBot:
             global id, name
             id = driver.find_elements(By.CLASS_NAME, "float-right")
             name = driver.find_elements(
-                By.XPATH, "/html/body/div[3]/div[4]/div/div[5]/div[2]/div[4]/div[1]/h3/a[1]".format(Index))
+                By.CLASS_NAME, "panel-title")
             for i in id:
                 ID.append(i.text)
             for i in name:
-                pb.append(i.text)
+                pb.append(i.text), print(i.text)
             page += 1
             driver.get(
                 "https://www.pbinfo.ro/probleme?start={}".format(page*10 - 10))
+        PbinfoBot.CreateJson(ID, "Problem_id.json")
+        PbinfoBot.CreateJson(pb, "Problem_name.json")
 
     def UploadProblems():
-        for i in range(0, len(ID) - 1):
-            currID, currName, st, dr, solution = ID[i], pb[i], 0, len(
-                names) - 1, ''
-            probName = driver.find_element(
-                By.XPATH, "/html/body/div[2]/div[4]/div/div[4]/h1/a[1]")
+        for i in range(5, len(pb) - 1):
+            ID[i].replace('#', '')
+            solution = ""
+            driver.get("https://www.pbinfo.ro/probleme/{}".format(Good(ID[i])))
             for j in range(0, len(names) - 1):
-                if j == probName:
+                if names[j] == pb[i]:
                     solution = solutionVector[j]
                     break
-            print(solution)
-            driver.get(
-                "https://www.pbinfo.ro/probleme/{}/{}".format(newId, currName))
+            if solution == "":
+                continue
+            sleep(2)
+            form = driver.find_element(
+                By.ID, "sursa")
+            driver.execute_script(
+                "arguments[0].setAttribute('value', arguments[1])", form, solution)
+            sleep(15)
+            driver.find_element(
+                By.ID, "btn-submit").click()
             break
-            form = driver.find_element(By.CLASS_NAME, "CodeMirror-scroll")
-            form.send_keys(solution)
-            # driver.find_element(
-            # By.XPATH, "/html/body/div[2]/div[3]/div/div[11]/div/div[12]/div[2]/div/form/div[4]/button").click()
 
     def CreateJson(data, name):
         with open(name, 'w') as i:
             json.dump(data, i, indent=len(data))
 
-    def AlternateSolution():
+    def LogIntoPbinfo():
         driver.get("https://www.pbinfo.ro/")
         autIcon = driver.find_element(
             By.XPATH, "/html/body/div[2]/nav/div/div[2]/ul[2]/li[1]/a/i")
@@ -143,12 +131,6 @@ class PbinfoBot:
         autButton.click()
 
 
-for i in range(1, len(names) - 1):
-    for j in range(i + 1, len(names)-1):
-        if i > j:
-            swap(names[i], names[j]), swap(
-                solutionVector[i], solutionVector[j])
-
 f = open("Problem_id.json")
 ID = json.load(f)
 f = open("A53_problem_names.json")
@@ -157,6 +139,31 @@ f = open("Problem_name.json")
 pb = json.load(f)
 f = open("solutions.json")
 solutionVector = json.load(f)
-PbinfoBot.AlternateSolution()
+for i in range(0, len(names) - 1):
+    names[i] = names[i].lower()
+
+for i in range(0, len(names) - 1):
+    for j in range(i + 1, len(names)-1):
+        if i > j:
+            swap(names[i], names[j]), swap(
+                solutionVector[i], solutionVector[j])
+
+
+lool = []
+for i in pb:
+    newPb = ""
+    OK = 0
+    for j in i:
+        if j == '#':
+            continue
+        if j.isalpha():
+            OK = 1
+        if OK:
+            newPb += j
+    lool.append(newPb)
+pb = lool
+for i in range(0, len(pb) - 1):
+    pb[i] = pb[i].lower()
+PbinfoBot.LogIntoPbinfo()
 sleep(2)
 PbinfoBot.UploadProblems()

@@ -11,6 +11,8 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException,  NoSuchWindowException, TimeoutException, StaleElementReferenceException
 from selenium.webdriver.common.keys import Keys
 import json
+import pyautogui
+from selenium.webdriver.common.action_chains import ActionChains
 driver = webdriver.Chrome(
     executable_path="chromedriver.exe")
 index, pageButton, cnt, solutionVector, ID, Index, page = 1, 1, 1, [], [], 3, 1
@@ -33,6 +35,9 @@ def Good(a):
         if j != '#':
             yes += j
     return yes
+
+
+action = ActionChains(driver)
 
 
 class PbinfoBot:
@@ -89,25 +94,39 @@ class PbinfoBot:
         PbinfoBot.CreateJson(pb, "Problem_name.json")
 
     def UploadProblems():
-        for i in range(5, len(pb) - 1):
+        for i in range(0, len(pb) - 1):
+            driver.get("https://www.pbinfo.ro/probleme/{}".format(Good(ID[i])))
+            WebDriverWait(driver, 30).until(EC.element_to_be_clickable((driver.find_element(
+                By.XPATH, "/html/body/div[2]/div[4]/div/div[10]/div/ul/li[1]/a"))))
+            pyautogui.moveTo(500, 300, duration=2)
             ID[i].replace('#', '')
             solution = ""
-            driver.get("https://www.pbinfo.ro/probleme/{}".format(Good(ID[i])))
+            sleep(1)
             for j in range(0, len(names) - 1):
                 if names[j] == pb[i]:
-                    solution = solutionVector[j]
+                    solution = solutionVector[j - 1]
                     break
             if solution == "":
                 continue
             sleep(2)
-            form = driver.find_element(
-                By.ID, "sursa")
-            driver.execute_script(
-                "arguments[0].setAttribute('value', arguments[1])", form, solution)
-            sleep(15)
-            driver.find_element(
-                By.ID, "btn-submit").click()
-            break
+            work = driver.find_element(
+                By.XPATH, "//*[@id={}]/pre[1]".format("'enunt'"))
+            go = driver.find_element(
+                By.CLASS_NAME, "CodeMirror-scroll")
+            driver.execute_script("arguments[0].scrollIntoView();", work)
+            pyautogui.click()
+            pyautogui.hotkey("ctrl", "a", "del", duration=3)
+            work.send_keys(solution)
+            pyautogui.hotkey("ctrl", "a", "c")
+            driver.execute_script("arguments[0].scrollIntoView();", go)
+            pyautogui.click()
+            pyautogui.hotkey("ctrl", "v")
+            sub = driver.find_element(
+                By.ID, "btn-submit")
+            driver.execute_script("arguments[0].scrollIntoView();", sub)
+            pyautogui.move(560, 320, duration=1)
+            pyautogui.click()
+            sleep(30)
 
     def CreateJson(data, name):
         with open(name, 'w') as i:
@@ -141,13 +160,6 @@ f = open("solutions.json")
 solutionVector = json.load(f)
 for i in range(0, len(names) - 1):
     names[i] = names[i].lower()
-
-for i in range(0, len(names) - 1):
-    for j in range(i + 1, len(names)-1):
-        if i > j:
-            swap(names[i], names[j]), swap(
-                solutionVector[i], solutionVector[j])
-
 
 lool = []
 for i in pb:

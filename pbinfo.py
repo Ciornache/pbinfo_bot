@@ -3,6 +3,7 @@ from hashlib import pbkdf2_hmac
 from hmac import new
 from http.client import NETWORK_AUTHENTICATION_REQUIRED
 from multiprocessing.connection import wait
+from telnetlib import LOGOUT
 from selenium import webdriver
 from time import sleep
 from selenium.webdriver.common.by import By
@@ -13,6 +14,7 @@ from selenium.webdriver.common.keys import Keys
 import json
 import pyautogui
 from selenium.webdriver.common.action_chains import ActionChains
+
 driver = webdriver.Chrome(
     executable_path="chromedriver.exe")
 index, pageButton, cnt, solutionVector, ID, Index, page = 1, 1, 1, [], [], 3, 1
@@ -41,6 +43,8 @@ action = ActionChains(driver)
 
 
 class PbinfoBot:
+    def __init__(self):
+        driver.maximize_window()
 
     def GetSolutions():
         driver.get("https://pastebin.com/u/a53")
@@ -93,12 +97,11 @@ class PbinfoBot:
         PbinfoBot.CreateJson(ID, "Problem_id.json")
         PbinfoBot.CreateJson(pb, "Problem_name.json")
 
-    def UploadProblems():
-        for i in range(0, len(pb) - 1):
+    def UploadProblems(self):
+        for i in range(4, len(pb) - 1):
             driver.get("https://www.pbinfo.ro/probleme/{}".format(Good(ID[i])))
-            WebDriverWait(driver, 30).until(EC.element_to_be_clickable((driver.find_element(
-                By.XPATH, "/html/body/div[2]/div[4]/div/div[10]/div/ul/li[1]/a"))))
-            pyautogui.moveTo(500, 300, duration=2)
+            WebDriverWait(driver, 30).until(EC.visibility_of((driver.find_element(
+                By.XPATH, "//*[@id={}]/a".format("'meniu-problema-enunt'")))))
             ID[i].replace('#', '')
             solution = ""
             sleep(1)
@@ -109,30 +112,47 @@ class PbinfoBot:
             if solution == "":
                 continue
             sleep(2)
-            work = driver.find_element(
-                By.XPATH, "//*[@id={}]/pre[1]".format("'enunt'"))
+            driver.get("https://pastebin.com/")
+            try:
+                WebDriverWait(driver, 30).until(EC.visibility_of(
+                    (driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div/div[1]/div"))))
+                agree = driver.find_element(
+                    By.XPATH, "/html/body/div[1]/div/div/div/div[2]/div/button[2]")
+                agree.click()
+                sleep(2)
+            except:
+                pass
+            textArea = driver.find_element(
+                By.XPATH, "//*[@id='postform-text']")
+            textArea.send_keys(solution)
+            pyautogui.moveTo(600, 700, duration=2)
+            pyautogui.hotkey("ctrl", "a", "c")
+            driver.get("https://www.pbinfo.ro/probleme/{}".format(Good(ID[i])))
+            WebDriverWait(driver, 30).until(EC.visibility_of((driver.find_element(
+                By.XPATH, "//*[@id={}]/a".format("'meniu-problema-enunt'")))))
             go = driver.find_element(
                 By.CLASS_NAME, "CodeMirror-scroll")
-            driver.execute_script("arguments[0].scrollIntoView();", work)
-            pyautogui.click()
-            pyautogui.hotkey("ctrl", "a", "del", duration=3)
-            work.send_keys(solution)
-            pyautogui.hotkey("ctrl", "a", "c")
             driver.execute_script("arguments[0].scrollIntoView();", go)
             pyautogui.click()
             pyautogui.hotkey("ctrl", "v")
             sub = driver.find_element(
                 By.ID, "btn-submit")
             driver.execute_script("arguments[0].scrollIntoView();", sub)
-            pyautogui.move(560, 320, duration=1)
-            pyautogui.click()
-            sleep(30)
+            sub.click()
+            sleep(2)
+            header = driver.find_element(
+                By.XPATH, "//*[@id={}]/h2[1]".format("'detalii-evaluare'"))
+            while 1:
+                try:
+                    header.text
+                except (StaleElementReferenceException):
+                    break
 
     def CreateJson(data, name):
         with open(name, 'w') as i:
-            json.dump(data, i, indent=len(data))
+            json.dump(data, i, indent=0)
 
-    def LogIntoPbinfo():
+    def LogIntoPbinfo(self):
         driver.get("https://www.pbinfo.ro/")
         autIcon = driver.find_element(
             By.XPATH, "/html/body/div[2]/nav/div/div[2]/ul[2]/li[1]/a/i")
@@ -150,6 +170,7 @@ class PbinfoBot:
         autButton.click()
 
 
+# Storing the data into json files for later uses
 f = open("Problem_id.json")
 ID = json.load(f)
 f = open("A53_problem_names.json")
@@ -157,6 +178,8 @@ names = json.load(f)
 f = open("Problem_name.json")
 pb = json.load(f)
 f = open("solutions.json")
+
+# Normalizing
 solutionVector = json.load(f)
 for i in range(0, len(names) - 1):
     names[i] = names[i].lower()
@@ -176,6 +199,10 @@ for i in pb:
 pb = lool
 for i in range(0, len(pb) - 1):
     pb[i] = pb[i].lower()
-PbinfoBot.LogIntoPbinfo()
-sleep(2)
-PbinfoBot.UploadProblems()
+
+# Initializing Bot
+Luffy = PbinfoBot()
+# Loggin into Pbinfo
+Luffy.LogIntoPbinfo()
+# Uploading the Problems
+Luffy.UploadProblems()

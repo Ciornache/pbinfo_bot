@@ -20,7 +20,7 @@ driver = webdriver.Chrome(
 index, pageButton, cnt, solutionVector, ID, Index, page = 1, 1, 1, [], [], 3, 1
 pb, names = [], []
 options = webdriver.ChromeOptions()
-options.add_argument('--ignore-certificate-errors')
+options.add_argument('--ignore-certificate-errors-spki-list')
 options.add_argument('--ignore-ssl-errors')
 driver = webdriver.Chrome(chrome_options=options)
 
@@ -46,15 +46,16 @@ class PbinfoBot:
     def __init__(self):
         driver.maximize_window()
 
-    def GetSolutions():
+    def GetSolutions(self):
         driver.get("https://pastebin.com/u/a53")
         global cnt, index, pageButton, solutionVector
         yes = 0
         while pageButton <= 20:
-            if pageButton == 20 and index == 75:
+            try:
+                problemName = driver.find_element(
+                    By.XPATH, '/html/body/div[1]/div[2]/div[1]/div[1]/table/tbody/tr[{}]/td[1]/a'.format(index))
+            except (NoSuchElementException):
                 break
-            problemName = driver.find_element(
-                By.XPATH, '/html/body/div[1]/div[2]/div[1]/div[1]/table/tbody/tr[{}]/td[1]/a'.format(index))
             names.append(problemName.text)
             if problemName.text == 'CPPREFERANCE':
                 index = index + 1
@@ -78,8 +79,10 @@ class PbinfoBot:
                 index = index - 100
                 pageButton += 1
             driver.get("https://pastebin.com/u/a53/{}".format(pageButton))
+        self.CreateJson(names, "A53_problem_names.json")
+        self.CreateJson(solutionVector, "solutions.json")
 
-    def GetProblemsIDS():
+    def GetProblemsIDS(self):
         global ID, Index, page
         driver.get("https://www.pbinfo.ro/probleme")
         while page <= 346:
@@ -88,21 +91,20 @@ class PbinfoBot:
             name = driver.find_elements(
                 By.CLASS_NAME, "panel-title")
             for i in id:
-                ID.append(i.text)
+                ID.append(i.text), print(i.text)
             for i in name:
-                pb.append(i.text), print(i.text)
+                pb.append(i.text)
             page += 1
             driver.get(
                 "https://www.pbinfo.ro/probleme?start={}".format(page*10 - 10))
-        PbinfoBot.CreateJson(ID, "Problem_id.json")
-        PbinfoBot.CreateJson(pb, "Problem_name.json")
+        self.CreateJson(ID, "Problem_id.json")
+        self.CreateJson(pb, "Problem_name.json")
 
     def UploadProblems(self):
-        for i in range(4, len(pb) - 1):
+        for i in range(0, len(pb) - 1):
             driver.get("https://www.pbinfo.ro/probleme/{}".format(Good(ID[i])))
             WebDriverWait(driver, 30).until(EC.visibility_of((driver.find_element(
                 By.XPATH, "//*[@id={}]/a".format("'meniu-problema-enunt'")))))
-            ID[i].replace('#', '')
             solution = ""
             sleep(1)
             for j in range(0, len(names) - 1):
@@ -114,8 +116,6 @@ class PbinfoBot:
             sleep(2)
             driver.get("https://pastebin.com/")
             try:
-                WebDriverWait(driver, 30).until(EC.visibility_of(
-                    (driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div/div[1]/div"))))
                 agree = driver.find_element(
                     By.XPATH, "/html/body/div[1]/div/div/div/div[2]/div/button[2]")
                 agree.click()
@@ -128,27 +128,22 @@ class PbinfoBot:
             pyautogui.moveTo(600, 700, duration=2)
             pyautogui.hotkey("ctrl", "a", "c")
             driver.get("https://www.pbinfo.ro/probleme/{}".format(Good(ID[i])))
-            WebDriverWait(driver, 30).until(EC.visibility_of((driver.find_element(
-                By.XPATH, "//*[@id={}]/a".format("'meniu-problema-enunt'")))))
+            print(30)
             go = driver.find_element(
                 By.CLASS_NAME, "CodeMirror-scroll")
             driver.execute_script("arguments[0].scrollIntoView();", go)
+            pyautogui.move(0, -200, duration=1)
             pyautogui.click()
             pyautogui.hotkey("ctrl", "v")
             sub = driver.find_element(
                 By.ID, "btn-submit")
             driver.execute_script("arguments[0].scrollIntoView();", sub)
             sub.click()
-            sleep(2)
-            header = driver.find_element(
-                By.XPATH, "//*[@id={}]/h2[1]".format("'detalii-evaluare'"))
             while 1:
-                try:
-                    header.text
-                except (StaleElementReferenceException):
+                if sub.text == "Adaugă soluția":
                     break
 
-    def CreateJson(data, name):
+    def CreateJson(self, data, name):
         with open(name, 'w') as i:
             json.dump(data, i, indent=0)
 
@@ -168,7 +163,20 @@ class PbinfoBot:
         autButton = driver.find_element(
             By.XPATH, "/html/body/div[2]/div[1]/div[2]/div/form/div[3]/div[1]/div/button[2]")
         autButton.click()
+        sleep(3)
 
+
+# Initializing Bot
+Luffy = PbinfoBot()
+
+# Traverse through Pastebin -> Get Solutions
+# Luffy.GetSolutions()
+
+# Loggin into Pbinfo
+Luffy.LogIntoPbinfo()
+
+# Configuring problem ID'S
+# Luffy.GetProblemsIDS()
 
 # Storing the data into json files for later uses
 f = open("Problem_id.json")
@@ -178,11 +186,12 @@ names = json.load(f)
 f = open("Problem_name.json")
 pb = json.load(f)
 f = open("solutions.json")
+solutionVector = json.load(f)
 
 # Normalizing
-solutionVector = json.load(f)
 for i in range(0, len(names) - 1):
     names[i] = names[i].lower()
+
 
 lool = []
 for i in pb:
@@ -200,9 +209,8 @@ pb = lool
 for i in range(0, len(pb) - 1):
     pb[i] = pb[i].lower()
 
-# Initializing Bot
-Luffy = PbinfoBot()
-# Loggin into Pbinfo
-Luffy.LogIntoPbinfo()
+
 # Uploading the Problems
 Luffy.UploadProblems()
+
+driver.quit()

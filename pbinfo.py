@@ -1,4 +1,6 @@
 from asyncio.windows_events import NULL
+import email
+from email.parser import BytesParser
 from hashlib import pbkdf2_hmac
 from hmac import new
 from http.client import NETWORK_AUTHENTICATION_REQUIRED
@@ -19,16 +21,17 @@ driver = webdriver.Chrome(
     executable_path="chromedriver.exe")
 index, pageButton, cnt, solutionVector, ID, Index, page = 1, 1, 1, [], [], 3, 1
 pb, names = [], []
+inter = 0
 options = webdriver.ChromeOptions()
 options.add_argument('--ignore-certificate-errors-spki-list')
 options.add_argument('--ignore-ssl-errors')
 driver = webdriver.Chrome(chrome_options=options)
 
 
-def swap(a, b):
-    crt = a
-    a = b
-    b = crt
+def swap(self, a, b):
+    crt = self.a
+    self.a = self.b
+    self.b = self.crt
 
 
 def Good(a):
@@ -100,18 +103,47 @@ class PbinfoBot:
         self.CreateJson(ID, "Problem_id.json")
         self.CreateJson(pb, "Problem_name.json")
 
+    def StrictUploading(self, id):
+        driver.get("https://www.pbinfo.ro/probleme/{}".format(Good(id)))
+        pyautogui.moveTo(600, 700, duration=2)
+        go = driver.find_element(
+            By.CLASS_NAME, "CodeMirror-scroll")
+        driver.execute_script("arguments[0].scrollIntoView();", go)
+        pyautogui.move(0, -200, duration=1)
+        pyautogui.click()
+        pyautogui.hotkey("ctrl", "v")
+        sub = driver.find_element(
+            By.ID, "btn-submit")
+        driver.execute_script("arguments[0].scrollIntoView();", sub)
+        sub.click()
+        while 1:
+            if sub.text == "Adaugă soluția":
+                break
+        sleep(10)
+
     def UploadProblems(self):
-        for i in range(0, len(pb) - 1):
+        for i in range(33, len(pb)):
             driver.get("https://www.pbinfo.ro/probleme/{}".format(Good(ID[i])))
             WebDriverWait(driver, 30).until(EC.visibility_of((driver.find_element(
                 By.XPATH, "//*[@id={}]/a".format("'meniu-problema-enunt'")))))
+            actualScore = driver.find_element(
+                By.XPATH, "//*[@id='zona-mijloc']/div/table/tbody/tr[2]/td[9]/div")
+            if actualScore.text == "100":
+                continue
             solution = ""
             sleep(1)
-            for j in range(0, len(names) - 1):
-                if names[j] == pb[i]:
-                    solution = solutionVector[j - 1]
+            left, right = 0, len(names) - 1
+            while left <= right:
+                mid = (left + right) >> 1
+                if names[mid] == pb[i]:
+                    solution = solutionVector[mid - 1]
                     break
+                if names[mid] < pb[i]:
+                    left = mid + 1
+                else:
+                    right = mid - 1
             if solution == "":
+                self.GoToSolinfo(pb[i], ID[i])
                 continue
             sleep(2)
             driver.get("https://pastebin.com/")
@@ -127,21 +159,7 @@ class PbinfoBot:
             textArea.send_keys(solution)
             pyautogui.moveTo(600, 700, duration=2)
             pyautogui.hotkey("ctrl", "a", "c")
-            driver.get("https://www.pbinfo.ro/probleme/{}".format(Good(ID[i])))
-            print(30)
-            go = driver.find_element(
-                By.CLASS_NAME, "CodeMirror-scroll")
-            driver.execute_script("arguments[0].scrollIntoView();", go)
-            pyautogui.move(0, -200, duration=1)
-            pyautogui.click()
-            pyautogui.hotkey("ctrl", "v")
-            sub = driver.find_element(
-                By.ID, "btn-submit")
-            driver.execute_script("arguments[0].scrollIntoView();", sub)
-            sub.click()
-            while 1:
-                if sub.text == "Adaugă soluția":
-                    break
+            self.StrictUploading(ID[i])
 
     def CreateJson(self, data, name):
         with open(name, 'w') as i:
@@ -165,6 +183,78 @@ class PbinfoBot:
         autButton.click()
         sleep(3)
 
+    def LogIntoSolinfo(self, emaiL_adress, password):
+        driver.get("https://solinfo.ro/")
+        sleep(5)
+        driver.find_element(
+            By.XPATH, "//*[@id='_solinfo']/div[2]/div[1]/header/div/div[3]/button").click()
+        driver.find_element(
+            By.XPATH, "//*[@id='primary-menu']/div[3]/ul/a[1]/li/span[1]").click()
+        sleep(2)
+        driver.find_element(
+            By.XPATH, "//*[@id='emailAddress']").send_keys(emaiL_adress)
+        driver.find_element(
+            By.XPATH, "//*[@id='_solinfo']/div[2]/div[3]/div/div/div/div[1]/div[2]/div/div/div[2]/div/button").click()
+        while 1:
+            try:
+                WebDriverWait(driver, 30).until(EC.visibility_of(
+                    (driver.find_element(By.XPATH, "//*[@id='password']"))))
+                break
+            except:
+                continue
+        driver.find_element(
+            By.XPATH, "//*[@id='password']").send_keys(password)
+        driver.find_element(
+            By.XPATH, "//*[@id='_solinfo']/div[2]/div[3]/div/div/div/div[1]/div[2]/div/div/div[3]/div/button").click()
+        sleep(5)
+
+    def Wait(self, element):
+        contor = 0
+        while 1:
+            contor += 1
+            if contor > 100:
+                break
+            print("loop")
+            try:
+                driver.find_element(By.XPATH, element)
+                break
+            except:
+                continue
+        print("yes")
+        contor = 0
+        while 1:
+            print("no")
+            contor += 1
+            if contor > 100:
+                break
+            try:
+                driver.find_element(By.XPATH, element).click()
+                break
+            except:
+                pass
+
+    def GoToSolinfo(self, name, id):
+        global inter
+        inter += 1
+        print(inter)
+        if inter == 0:
+            self.LogIntoSolinfo("varunax424@gmail.com", "")
+        driver.get("https://solinfo.ro/problema/{}".format(name))
+        try:
+            sleep(5)
+            WebDriverWait(driver, 30).until(EC.visibility_of((driver.find_element(
+                By.XPATH, "//*[@id='_solinfo']/div[2]/div[3]/div/div/div/img"))))
+            return
+        except:
+            pass
+        pyautogui.moveTo(400, 690, duration=2)
+        pyautogui.click()
+        pyautogui.moveTo(700, 1000, duration=2)
+        pyautogui.click()
+        pyautogui.moveTo(1250, 400, duration=10)
+        pyautogui.click()
+        self.StrictUploading(id)
+
 
 # Initializing Bot
 Luffy = PbinfoBot()
@@ -173,7 +263,7 @@ Luffy = PbinfoBot()
 # Luffy.GetSolutions()
 
 # Loggin into Pbinfo
-Luffy.LogIntoPbinfo()
+# Luffy.LogIntoPbinfo()
 
 # Configuring problem ID'S
 # Luffy.GetProblemsIDS()
@@ -189,9 +279,8 @@ f = open("solutions.json")
 solutionVector = json.load(f)
 
 # Normalizing
-for i in range(0, len(names) - 1):
+for i in range(0, len(names)):
     names[i] = names[i].lower()
-
 
 lool = []
 for i in pb:
@@ -206,11 +295,20 @@ for i in pb:
             newPb += j
     lool.append(newPb)
 pb = lool
-for i in range(0, len(pb) - 1):
+for i in range(0, len(pb)):
     pb[i] = pb[i].lower()
+
+# Sorting the Problems for optimization
+
+for i in range(0, len(names) - 1):
+    for j in range(i + 1, len(names)):
+        if names[i] > names[j]:
+            names[i], names[j] = names[j], names[i]
+            solutionVector[i - 1], solutionVector[j -
+                                                  1] = solutionVector[j - 1], solutionVector[i - 1]
 
 
 # Uploading the Problems
-Luffy.UploadProblems()
-
+# Luffy.UploadProblems()
+Luffy.GoToSolinfo("liceu", "3155")
 driver.quit()

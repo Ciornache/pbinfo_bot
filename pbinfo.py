@@ -121,8 +121,17 @@ class PbinfoBot:
                 break
         sleep(10)
 
+    def FormatTitle(self, title):
+        good = ''
+        for i in range(0, len(title)):
+            if title[i] == ' ' or title[i] == '_':
+                good += '-'
+            else:
+                good += title[i]
+        return good
+
     def UploadProblems(self):
-        for i in range(33, len(pb)):
+        for i in range(0, len(pb)):
             driver.get("https://www.pbinfo.ro/probleme/{}".format(Good(ID[i])))
             WebDriverWait(driver, 30).until(EC.visibility_of((driver.find_element(
                 By.XPATH, "//*[@id={}]/a".format("'meniu-problema-enunt'")))))
@@ -143,7 +152,7 @@ class PbinfoBot:
                 else:
                     right = mid - 1
             if solution == "":
-                self.GoToSolinfo(pb[i], ID[i])
+                self.GoToSolinfo(self.FormatTitle(pb[i]), ID[i])
                 continue
             sleep(2)
             driver.get("https://pastebin.com/")
@@ -236,10 +245,12 @@ class PbinfoBot:
     def GoToSolinfo(self, name, id):
         global inter
         inter += 1
-        print(inter)
-        if inter == 0:
-            self.LogIntoSolinfo("varunax424@gmail.com", "")
+        # print(inter)
+        if inter == 1:
+            self.LogIntoSolinfo("varunax424@gmail.com", "teodor6996teodor")
         driver.get("https://solinfo.ro/problema/{}".format(name))
+        WebDriverWait(driver, 30).until(EC.visibility_of(
+            (driver.find_element(By.XPATH, "//*[@id='_solinfo']/div[2]/div[1]/header/div"))))
         try:
             sleep(5)
             WebDriverWait(driver, 30).until(EC.visibility_of((driver.find_element(
@@ -247,12 +258,16 @@ class PbinfoBot:
             return
         except:
             pass
-        pyautogui.moveTo(400, 690, duration=2)
-        pyautogui.click()
-        pyautogui.moveTo(700, 1000, duration=2)
-        pyautogui.click()
-        pyautogui.moveTo(1250, 400, duration=10)
-        pyautogui.click()
+        form = driver.find_element(
+            By.XPATH, "//*[@id='_solinfo']/div[2]/div[3]/div/div/div[3]/div/div[4]/div/div[1]/div[1]")
+        form.click()
+        WebDriverWait(driver, 30).until(EC.element_to_be_clickable((driver.find_element(
+            By.XPATH, "//*[@id='_solinfo']/div[2]/div[3]/div/div/div[3]/div/div[4]/div/div[1]/div[2]/div/div/div/div/div/div/div/div[2]/button"))))
+        driver.find_element(
+            By.XPATH, "//*[@id='_solinfo']/div[2]/div[3]/div/div/div[3]/div/div[4]/div/div[1]/div[2]/div/div/div/div/div/div/div/div[2]/button").click()
+        sleep(5)
+        driver.find_element(
+            By.XPATH, "//*[@id='_solinfo']/div[2]/div[3]/div/div/div[3]/div/div[4]/div/div[1]/div[2]/div/div/div/div/div/div[1]/div/div/span[1]").click()
         self.StrictUploading(id)
 
 
@@ -263,7 +278,7 @@ Luffy = PbinfoBot()
 # Luffy.GetSolutions()
 
 # Loggin into Pbinfo
-# Luffy.LogIntoPbinfo()
+Luffy.LogIntoPbinfo()
 
 # Configuring problem ID'S
 # Luffy.GetProblemsIDS()
@@ -307,8 +322,8 @@ for i in range(0, len(names) - 1):
             solutionVector[i - 1], solutionVector[j -
                                                   1] = solutionVector[j - 1], solutionVector[i - 1]
 
-
 # Uploading the Problems
-# Luffy.UploadProblems()
-Luffy.GoToSolinfo("liceu", "3155")
+Luffy.UploadProblems()
+
+# End Of Line
 driver.quit()

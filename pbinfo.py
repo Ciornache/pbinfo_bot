@@ -43,6 +43,23 @@ def Good(a):
 
 
 action = ActionChains(driver)
+print("\n\n\n\n\n")
+print("Welcome to the Official Unofficial very legal and non-controversial pbinfo bot made by the Future Pirate King Monkey D Luffy!!!!!!\n")
+print("You want flex and drip, get all the girls and make the grannies around you wet as hell, then you are in the right place. With the help of this fantastic bot, you are gonna be top 1 in the pbinfo leaderboard\n\n\n")
+print("##### Instructions!!!!! #####\n\n")
+print("You may leave this bot AFK for severeal hours to do it's job. After you enter your credentials, place your mouse on the middle of the screen( or anywhere else but not the corners) \n")
+print("This bot uses a software that takes control of your mouse and uses it to simulate the activity of a real human( a very good problem solver as well ) \n")
+print("Enter your credential down below:\n\n")
+
+# TAKING INPUT
+#------------------------------------------#
+
+username = input("Enter your pbinfo username: \n")
+password = input("Enter your password: \n")
+solinfoUsername = input("Enter your email for solinfo authentification: \n")
+solinfoPassword = input("Enter your solinfo password: \n")
+
+#-----------------------------------------#
 
 
 class PbinfoBot:
@@ -119,7 +136,7 @@ class PbinfoBot:
         while 1:
             if sub.text == "Adaugă soluția":
                 break
-        sleep(10)
+        sleep(30)
 
     def FormatTitle(self, title):
         good = ''
@@ -175,6 +192,7 @@ class PbinfoBot:
             json.dump(data, i, indent=0)
 
     def LogIntoPbinfo(self):
+        global password, username
         driver.get("https://www.pbinfo.ro/")
         autIcon = driver.find_element(
             By.XPATH, "/html/body/div[2]/nav/div/div[2]/ul[2]/li[1]/a/i")
@@ -185,12 +203,12 @@ class PbinfoBot:
             By.XPATH, "/html/body/div[2]/div[1]/div[2]/div/form/div[2]/div[1]/div/input")
         parola = driver.find_element(
             By.XPATH, "/html/body/div[2]/div[1]/div[2]/div/form/div[2]/div[2]/div/input")
-        utilizator.send_keys("MonkeyDLuffy")
-        parola.send_keys("peakpiece1234")
+        utilizator.send_keys(username)
+        parola.send_keys(password)
         autButton = driver.find_element(
             By.XPATH, "/html/body/div[2]/div[1]/div[2]/div/form/div[3]/div[1]/div/button[2]")
         autButton.click()
-        sleep(3)
+        self.Wait(driver.find_element(By.CLASS_NAME, "dropdown-toggle"))
 
     def LogIntoSolinfo(self, emaiL_adress, password):
         driver.get("https://solinfo.ro/")
@@ -221,18 +239,18 @@ class PbinfoBot:
         contor = 0
         while 1:
             contor += 1
-            if contor > 100:
+            if contor > 1000:
                 break
-            print("loop")
+            # print("loop")
             try:
                 driver.find_element(By.XPATH, element)
                 break
             except:
                 continue
-        print("yes")
+        # print("yes")
         contor = 0
         while 1:
-            print("no")
+            # print("no")
             contor += 1
             if contor > 100:
                 break
@@ -243,11 +261,11 @@ class PbinfoBot:
                 pass
 
     def GoToSolinfo(self, name, id):
-        global inter
+        global inter, solinfoUsername, solinfoPassword
         inter += 1
         # print(inter)
         if inter == 1:
-            self.LogIntoSolinfo("varunax424@gmail.com", "teodor6996teodor")
+            self.LogIntoSolinfo(solinfoUsername, solinfoPassword)
         driver.get("https://solinfo.ro/problema/{}".format(name))
         WebDriverWait(driver, 30).until(EC.visibility_of(
             (driver.find_element(By.XPATH, "//*[@id='_solinfo']/div[2]/div[1]/header/div"))))
@@ -269,6 +287,9 @@ class PbinfoBot:
         driver.find_element(
             By.XPATH, "//*[@id='_solinfo']/div[2]/div[3]/div/div/div[3]/div/div[4]/div/div[1]/div[2]/div/div/div/div/div/div[1]/div/div/span[1]").click()
         self.StrictUploading(id)
+
+    def IhateAdds(self):
+        self.kill()
 
 
 # Initializing Bot

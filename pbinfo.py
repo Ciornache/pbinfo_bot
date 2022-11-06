@@ -16,7 +16,8 @@ from selenium.webdriver.common.keys import Keys
 import json
 import pyautogui
 from selenium.webdriver.common.action_chains import ActionChains
-
+import asyncio
+import threading
 driver = webdriver.Chrome(
     executable_path="chromedriver.exe")
 index, pageButton, cnt, solutionVector, ID, Index, page = 1, 1, 1, [], [], 3, 1
@@ -43,6 +44,10 @@ def Good(a):
 
 
 action = ActionChains(driver)
+
+# DIALOGUE
+
+#--------------------------------------------------------------------#
 print("\n\n\n\n\n")
 print("Welcome to the Official Unofficial very legal and non-controversial pbinfo bot made by the Future Pirate King Monkey D Luffy!!!!!!\n")
 print("You want flex and drip, get all the girls and make the grannies around you wet as hell, then you are in the right place. With the help of this fantastic bot, you are gonna be top 1 in the pbinfo leaderboard\n\n\n")
@@ -50,14 +55,31 @@ print("##### Instructions!!!!! #####\n\n")
 print("You may leave this bot AFK for severeal hours to do it's job. After you enter your credentials, place your mouse on the middle of the screen( or anywhere else but not the corners) \n")
 print("This bot uses a software that takes control of your mouse and uses it to simulate the activity of a real human( a very good problem solver as well ) \n")
 print("Enter your credential down below:\n\n")
+print("Use this commands for easier times\n")
+print("cd 1 for Typing pbinfo username \n")
+print("cd 2 for Typing pbinfo password \n")
+print("cd 3 for Typing solinfo username \n")
+print("cd 4 for Typing solinfo password \n")
+print("ready to start \n")
+#--------------------------------------------------------------------#
 
 # TAKING INPUT
 #------------------------------------------#
 
-username = input("Enter your pbinfo username: \n")
-password = input("Enter your password: \n")
-solinfoUsername = input("Enter your email for solinfo authentification: \n")
-solinfoPassword = input("Enter your solinfo password: \n")
+while 1:
+    print("Waiting for Command\n")
+    command = input()
+    if command == "cd 1":
+        username = input("Enter your pbinfo username: \n")
+    if command == "cd 2":
+        password = input("Enter your password: \n")
+    if command == "cd 3":
+        solinfoUsername = input(
+            "Enter your email for solinfo authentification: \n")
+    if command == "cd 4":
+        solinfoPassword = input("Enter your solinfo password: \n")
+    if command == "ready":
+        break
 
 #-----------------------------------------#
 
@@ -65,6 +87,10 @@ solinfoPassword = input("Enter your solinfo password: \n")
 class PbinfoBot:
     def __init__(self):
         driver.maximize_window()
+
+    def EntartainUser(self):
+        while 1:  # TO DO
+            print("Hello nakama!!!\n")
 
     def GetSolutions(self):
         driver.get("https://pastebin.com/u/a53")
@@ -148,7 +174,11 @@ class PbinfoBot:
         return good
 
     def UploadProblems(self):
-        for i in range(0, len(pb)):
+        f = open("work.json")
+        index = json.load(f)
+        # print(index)
+        for i in range(index, len(pb)):
+            self.CreateJson(i, "work.json")
             driver.get("https://www.pbinfo.ro/probleme/{}".format(Good(ID[i])))
             WebDriverWait(driver, 30).until(EC.visibility_of((driver.find_element(
                 By.XPATH, "//*[@id={}]/a".format("'meniu-problema-enunt'")))))
@@ -192,6 +222,8 @@ class PbinfoBot:
             json.dump(data, i, indent=0)
 
     def LogIntoPbinfo(self):
+        t = threading.Thread(target=self.EntartainUser)
+        t.start()
         global password, username
         driver.get("https://www.pbinfo.ro/")
         autIcon = driver.find_element(
@@ -298,13 +330,13 @@ Luffy = PbinfoBot()
 # Traverse through Pastebin -> Get Solutions
 # Luffy.GetSolutions()
 
-# Loggin into Pbinfo
+# Logging into Pbinfo
 Luffy.LogIntoPbinfo()
 
 # Configuring problem ID'S
 # Luffy.GetProblemsIDS()
 
-# Storing the data into json files for later uses
+# Getting the data from the JSON FILES
 f = open("Problem_id.json")
 ID = json.load(f)
 f = open("A53_problem_names.json")
@@ -313,6 +345,7 @@ f = open("Problem_name.json")
 pb = json.load(f)
 f = open("solutions.json")
 solutionVector = json.load(f)
+
 
 # Normalizing
 for i in range(0, len(names)):

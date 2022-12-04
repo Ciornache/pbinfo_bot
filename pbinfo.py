@@ -18,15 +18,29 @@ import pyautogui
 from selenium.webdriver.common.action_chains import ActionChains
 import asyncio
 import threading
-driver = webdriver.Chrome(
-    executable_path="chromedriver.exe")
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+
 index, pageButton, cnt, solutionVector, ID, Index, page = 1, 1, 1, [], [], 3, 1
 pb, names = [], []
+my_dict = {}
 inter = 0
 options = webdriver.ChromeOptions()
 options.add_argument('--ignore-certificate-errors-spki-list')
 options.add_argument('--ignore-ssl-errors')
-driver = webdriver.Chrome(chrome_options=options)
+options.add_argument("enable-automation")
+# options.add_argument("--headless")
+options.add_argument("--window-size=1920,1080")
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-extensions")
+options.add_argument("--dns-prefetch-disable")
+options.add_argument("--disable-gpu")
+options.add_argument("--disable-3d-apis")
+
+cap = DesiredCapabilities.CHROME
+cap["pageLoadStrategy"] = "none"
+
+driver = webdriver.Chrome(
+    executable_path="chromedriver.exe", options=options, desired_capabilities=cap)
 
 
 def swap(self, a, b):
@@ -45,9 +59,12 @@ def Good(a):
 
 action = ActionChains(driver)
 
+
 # DIALOGUE
 
 #--------------------------------------------------------------------#
+
+
 print("\n\n\n\n\n")
 print("Welcome to the Official Unofficial very legal and non-controversial pbinfo bot made by the Future Pirate King Monkey D Luffy!!!!!!\n")
 print("You want flex and drip, get all the girls and make the grannies around you wet as hell, then you are in the right place. With the help of this fantastic bot, you are gonna be top 1 in the pbinfo leaderboard\n\n\n")
@@ -61,6 +78,8 @@ print("cd 2 for Typing pbinfo password \n")
 print("cd 3 for Typing solinfo username \n")
 print("cd 4 for Typing solinfo password \n")
 print("ready to start \n")
+
+
 #--------------------------------------------------------------------#
 
 # TAKING INPUT
@@ -87,10 +106,6 @@ while 1:
 class PbinfoBot:
     def __init__(self):
         driver.maximize_window()
-
-    def EntartainUser(self):
-        while 1:  # TO DO
-            print("Hello nakama!!!\n")
 
     def GetSolutions(self):
         driver.get("https://pastebin.com/u/a53")
@@ -128,6 +143,14 @@ class PbinfoBot:
         self.CreateJson(names, "A53_problem_names.json")
         self.CreateJson(solutionVector, "solutions.json")
 
+    def TryToScroll(self):
+        pyautogui.moveTo(1960, 1000, duration=1)
+        pyautogui.click()
+        pyautogui.click()
+        pyautogui.click()
+        pyautogui.click()
+        pyautogui.click()
+
     def GetProblemsIDS(self):
         global ID, Index, page
         driver.get("https://www.pbinfo.ro/probleme")
@@ -148,21 +171,37 @@ class PbinfoBot:
 
     def StrictUploading(self, id):
         driver.get("https://www.pbinfo.ro/probleme/{}".format(Good(id)))
+        while 1:
+            try:
+                WebDriverWait(driver, 60).until(EC.element_to_be_clickable((driver.find_element(
+                    By.XPATH, "//*[@id={}]/a".format("'meniu-problema-enunt'")))))
+                break
+            except:
+                continue
         pyautogui.moveTo(600, 700, duration=2)
         go = driver.find_element(
             By.CLASS_NAME, "CodeMirror-scroll")
-        driver.execute_script("arguments[0].scrollIntoView();", go)
-        pyautogui.move(0, -200, duration=1)
+        self.TryToScroll()
+        pyautogui.moveTo(1100, 550, duration=1)
         pyautogui.click()
         pyautogui.hotkey("ctrl", "v")
+        self.TryToScroll()
         sub = driver.find_element(
             By.ID, "btn-submit")
-        driver.execute_script("arguments[0].scrollIntoView();", sub)
         sub.click()
+        try:
+            driver.find_element(By.XPATH, "//*[@id='detalii-evaluare']/h2")
+            self.StrictUploading(id)
+        except:
+            pass
         while 1:
-            if sub.text == "Adaugă soluția":
-                break
-        sleep(30)
+            try:
+                if sub.text == "Adaugă soluția":
+                    break
+            except:
+                pass
+
+        sleep(60)
 
     def FormatTitle(self, title):
         good = ''
@@ -178,16 +217,23 @@ class PbinfoBot:
         index = json.load(f)
         # print(index)
         for i in range(index, len(pb)):
+            if my_dict[Good(ID[i])] == 1:
+                continue
             self.CreateJson(i, "work.json")
             driver.get("https://www.pbinfo.ro/probleme/{}".format(Good(ID[i])))
-            WebDriverWait(driver, 30).until(EC.visibility_of((driver.find_element(
-                By.XPATH, "//*[@id={}]/a".format("'meniu-problema-enunt'")))))
+            while 1:
+                try:
+                    WebDriverWait(driver, 60).until(EC.element_to_be_clickable((driver.find_element(
+                        By.XPATH, "//*[@id={}]/a".format("'meniu-problema-enunt'")))))
+                    break
+                except:
+                    continue
             actualScore = driver.find_element(
                 By.XPATH, "//*[@id='zona-mijloc']/div/table/tbody/tr[2]/td[9]/div")
             if actualScore.text == "100":
                 continue
+            my_dict[Good(ID[i])] = 1
             solution = ""
-            sleep(1)
             left, right = 0, len(names) - 1
             while left <= right:
                 mid = (left + right) >> 1
@@ -201,7 +247,6 @@ class PbinfoBot:
             if solution == "":
                 self.GoToSolinfo(self.FormatTitle(pb[i]), ID[i])
                 continue
-            sleep(2)
             driver.get("https://pastebin.com/")
             try:
                 agree = driver.find_element(
@@ -210,10 +255,12 @@ class PbinfoBot:
                 sleep(2)
             except:
                 pass
+            self.Wait("//*[@id='postform-text']")
             textArea = driver.find_element(
                 By.XPATH, "//*[@id='postform-text']")
             textArea.send_keys(solution)
             pyautogui.moveTo(600, 700, duration=2)
+            sleep(1)
             pyautogui.hotkey("ctrl", "a", "c")
             self.StrictUploading(ID[i])
 
@@ -222,14 +269,16 @@ class PbinfoBot:
             json.dump(data, i, indent=0)
 
     def LogIntoPbinfo(self):
-        t = threading.Thread(target=self.EntartainUser)
-        t.start()
+        #t = threading.Thread(target=self.EntartainUser)
+        # t.start()c
         global password, username
         driver.get("https://www.pbinfo.ro/")
+        self.Wait("//*[@id= 'navbar']/ul[2]/li[1]/a")
+        self.Wait("/html/body/div[2]/nav/div/div[2]/ul[2]/li[1]/a/i")
         autIcon = driver.find_element(
             By.XPATH, "/html/body/div[2]/nav/div/div[2]/ul[2]/li[1]/a/i")
         autIcon.click()
-        WebDriverWait(driver, 10).until(EC.element_to_be_clickable(
+        WebDriverWait(driver, 60).until(EC.element_to_be_clickable(
             (By.XPATH, "/html/body/div[2]/div[1]/div[2]/div/form/div[2]/div[1]/div/input")))
         utilizator = driver.find_element(
             By.XPATH, "/html/body/div[2]/div[1]/div[2]/div/form/div[2]/div[1]/div/input")
@@ -240,18 +289,23 @@ class PbinfoBot:
         autButton = driver.find_element(
             By.XPATH, "/html/body/div[2]/div[1]/div[2]/div/form/div[3]/div[1]/div/button[2]")
         autButton.click()
-        self.Wait(driver.find_element(By.CLASS_NAME, "dropdown-toggle"))
 
     def LogIntoSolinfo(self, emaiL_adress, password):
         driver.get("https://solinfo.ro/")
-        sleep(5)
+        sleep(1)
+        self.Wait("//*[@id='_solinfo']/div[2]/div[1]/header/div/div[3]/button")
         driver.find_element(
             By.XPATH, "//*[@id='_solinfo']/div[2]/div[1]/header/div/div[3]/button").click()
+        sleep(1)
+        self.Wait("//*[@id='primary-menu']/div[3]/ul/a[1]/li/span[1]")
         driver.find_element(
             By.XPATH, "//*[@id='primary-menu']/div[3]/ul/a[1]/li/span[1]").click()
-        sleep(2)
+        sleep(1)
+        self.Wait("//*[@id='emailAddress']")
         driver.find_element(
             By.XPATH, "//*[@id='emailAddress']").send_keys(emaiL_adress)
+        self.Wait(
+            "//*[@id='_solinfo']/div[2]/div[3]/div/div/div/div[1]/div[2]/div/div/div[2]/div/button")
         driver.find_element(
             By.XPATH, "//*[@id='_solinfo']/div[2]/div[3]/div/div/div/div[1]/div[2]/div/div/div[2]/div/button").click()
         while 1:
@@ -261,36 +315,24 @@ class PbinfoBot:
                 break
             except:
                 continue
+        self.Wait("//*[@id='password']")
         driver.find_element(
             By.XPATH, "//*[@id='password']").send_keys(password)
+        self.Wait(
+            "//*[@id='_solinfo']/div[2]/div[3]/div/div/div/div[1]/div[2]/div/div/div[3]/div/button")
         driver.find_element(
             By.XPATH, "//*[@id='_solinfo']/div[2]/div[3]/div/div/div/div[1]/div[2]/div/div/div[3]/div/button").click()
         sleep(5)
 
     def Wait(self, element):
-        contor = 0
         while 1:
-            contor += 1
-            if contor > 1000:
-                break
-            # print("loop")
+            # print(element)
             try:
                 driver.find_element(By.XPATH, element)
                 break
             except:
                 continue
         # print("yes")
-        contor = 0
-        while 1:
-            # print("no")
-            contor += 1
-            if contor > 100:
-                break
-            try:
-                driver.find_element(By.XPATH, element).click()
-                break
-            except:
-                pass
 
     def GoToSolinfo(self, name, id):
         global inter, solinfoUsername, solinfoPassword
@@ -299,8 +341,7 @@ class PbinfoBot:
         if inter == 1:
             self.LogIntoSolinfo(solinfoUsername, solinfoPassword)
         driver.get("https://solinfo.ro/problema/{}".format(name))
-        WebDriverWait(driver, 30).until(EC.visibility_of(
-            (driver.find_element(By.XPATH, "//*[@id='_solinfo']/div[2]/div[1]/header/div"))))
+        self.Wait("//*[@id='_solinfo']/div[2]/div[1]/header/div")
         try:
             sleep(5)
             WebDriverWait(driver, 30).until(EC.visibility_of((driver.find_element(
@@ -308,14 +349,27 @@ class PbinfoBot:
             return
         except:
             pass
+        self.Wait(
+            "//*[@id='_solinfo']/div[2]/div[3]/div/div/div[3]/div/div[4]/div/div[1]/div[1]")
         form = driver.find_element(
             By.XPATH, "//*[@id='_solinfo']/div[2]/div[3]/div/div/div[3]/div/div[4]/div/div[1]/div[1]")
         form.click()
-        WebDriverWait(driver, 30).until(EC.element_to_be_clickable((driver.find_element(
-            By.XPATH, "//*[@id='_solinfo']/div[2]/div[3]/div/div/div[3]/div/div[4]/div/div[1]/div[2]/div/div/div/div/div/div/div/div[2]/button"))))
+        try:
+            sleep(1)
+            driver.find_element(
+                By.XPATH, "//*[@id='_solinfo']/div[2]/div[3]/div/div/div[3]/div/div[4]/div/div[1]/div[2]/div/div/div/div/div/div/div[2]").click()
+            sleep(60)
+            self.GoToSolinfo(name, id)
+            return
+        except:
+            pass
+        self.Wait(
+            ("//*[@id='_solinfo']/div[2]/div[3]/div/div/div[3]/div/div[4]/div/div[1]/div[2]/div/div/div/div/div/div/div/div[2]/button"))
         driver.find_element(
             By.XPATH, "//*[@id='_solinfo']/div[2]/div[3]/div/div/div[3]/div/div[4]/div/div[1]/div[2]/div/div/div/div/div/div/div/div[2]/button").click()
         sleep(5)
+        self.Wait(
+            "//*[@id='_solinfo']/div[2]/div[3]/div/div/div[3]/div/div[4]/div/div[1]/div[2]/div/div/div/div/div/div[1]/div/div/span[1]")
         driver.find_element(
             By.XPATH, "//*[@id='_solinfo']/div[2]/div[3]/div/div/div[3]/div/div[4]/div/div[1]/div[2]/div/div/div/div/div/div[1]/div/div/span[1]").click()
         self.StrictUploading(id)
@@ -366,6 +420,8 @@ for i in pb:
 pb = lool
 for i in range(0, len(pb)):
     pb[i] = pb[i].lower()
+for i in range(0, len(ID)):
+    my_dict[Good(ID[i])] = 0
 
 # Sorting the Problems for optimization
 
